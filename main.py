@@ -1,3 +1,9 @@
+# Warren Lowery 4/9/2025
+"""
+This is a short number guessing game with 3 difficulties per each of the 2 gamemodes.
+"""
+
+
 import random
 import hashlib
 import requests
@@ -123,26 +129,27 @@ while True:
                 if guess < 1 or guess > max_number:
                     print(f"Please input an integer between 1 and {max_number}")
                     continue
+
+                # Increase the number of guesses to be calculated for score later
+                guesses += 1
+
+                if guess == secret_number:
+                    print("Congratulations, " + name + "! You correctly guessed the secret number!")
+                    break
+                elif guess < secret_number:
+                    print(random.choice(too_low))
+                elif guess > secret_number:
+                    print(random.choice(too_high))
             except ValueError:
                 print(f"Invalid input! Enter an integer between 1 and {max_number}.")
 
-            #Increase the number of guesses to be calculated for score later
-            guesses += 1
-
-            if guess == secret_number:
-                print("Congratulations, "+name+"! You correctly guessed the secret number!")
-                break
-            elif guess < secret_number:
-                print(random.choice(too_low))
-            elif guess > secret_number:
-                print(random.choice(too_high))
 
         score = guesses
 
 
 # Limited Guesses Mode
     elif mode == 2:
-        print("You have chosen Limited Guesses")
+        print("You have chosen Limited Guesses!")
         diff = numbered_input("What difficulty would you like to play?\n[1] Easy (15 Guesses)\n[2] Medium (10 Guesses)\n[3] Hard (5 Guesses)\n>", 3)
         max_number = 100
         distances = []
@@ -159,7 +166,7 @@ while True:
 
         secret_number = random.randint(1, max_number)
         guesses = 0
-
+        print(f"I have chosen a number between 1 and {max_number}.")
         while True:
             # make sure the guesses are integers
             try:
@@ -171,21 +178,30 @@ while True:
                     dist_score = max_number - abs(secret_number - guess)
                     distances.append(dist_score)
 
+
+                # Increase the number of guesses to be calculated for score later
+                guesses += 1
+
+                if guess == secret_number:
+                    print("Congratulations, " + name + "! You correctly guessed the secret number!")
+                    break
+                elif guess < secret_number:
+                    print(random.choice(too_low))
+                elif guess > secret_number:
+                    print(random.choice(too_high))
+                if guesses == maxGuesses:
+                    print(f"You ran out of guesses {name}")
+                    break
             except ValueError:
                 print(f"Invalid input! Enter an integer between {1} and {max_number}.")
-            #Increase the number of guesses to be calculated for score later
-            guesses += 1
-            if guess == secret_number:
-                print("Congratulations, "+name+"! You correctly guessed the secret number!")
-                break
-            elif guess < secret_number:
-                print(random.choice(too_low))
-            elif guess > secret_number:
-                print(random.choice(too_high))
-            if guesses == maxGuesses:
-                print(f"You ran out of guesses {name}")
-                break
+
             print(f"You have {maxGuesses - guesses} guesses remaining.")
+
+        remaining_guesses = maxGuesses - guesses
+        while remaining_guesses > 0:
+            distances.append(100)
+            remaining_guesses -= 1
+
         score = sum(distances) / len(distances)
 
     print("Your score was: " + str(score))
