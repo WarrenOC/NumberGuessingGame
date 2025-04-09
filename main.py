@@ -2,24 +2,23 @@ import random
 import hashlib
 import requests
 
-# Google Apps Script Web App URL (Replace with your actual URL)
-GOOGLE_SHEETS_URL = "https://script.google.com/macros/s/AKfycbz0sMrDJWyDkWfxXr15PE_CU2PzbLLBJjj98SWiHnxQF_uqXPS9tn9PI3Q5KaVhGKuu/exec"
+# google sheets app script WEB APP url
+url = "https://script.google.com/macros/s/AKfycbz0sMrDJWyDkWfxXr15PE_CU2PzbLLBJjj98SWiHnxQF_uqXPS9tn9PI3Q5KaVhGKuu/exec"
 
 
 def generate_code_hash():
-    """Reads the current Python file and generates a SHA-256 hash."""
+    """create an sha256 hash from the current python file, stack overflow helped me with this honestly its kinda like sorcery"""
     try:
-        with open(__file__, "rb") as f:  # Open this script file
+        with open(__file__, "rb") as f:
             file_contents = f.read()
         return hashlib.sha256(file_contents).hexdigest()
     except:
-        return "ERROR: Could not generate hash."  # If running in an environment without __file__ (like Google Colab)
+        return "Error generating hash"
 
 def submit_score(name, score, mode, diff):
-    # Generate hash of the script
+
     game_hash = generate_code_hash()
 
-    # Send data to Google Sheets
     data = {
         "player": name,
         "score": score,
@@ -29,11 +28,36 @@ def submit_score(name, score, mode, diff):
     }
 
 
-    response = requests.post(GOOGLE_SHEETS_URL, json=data)
+    response = requests.post(url, json=data)
     print(response.text)  # Show server response
 
+def get_leaderboard(mode, difficulty):
+    """
+    sends an http get request, parses the json and prints it. this stuff is evil dark wizardry
+    :param mode: integer either 1 or 2
+    :param difficulty: integer either 1, 2, or 3
+    :return:
+    """
+    url = "https://script.google.com/macros/s/AKfycbz0sMrDJWyDkWfxXr15PE_CU2PzbLLBJjj98SWiHnxQF_uqXPS9tn9PI3Q5KaVhGKuu/exec"
+
+    response = requests.get(url, params={"mode": mode, "difficulty": difficulty})
+
+    if response.status_code == 200: #200 is the success code in HTTP so if we get anything else just fail it
+        leaderboard = response.json()
+        print("Top 5 Leaderboard:")
+        rank = 1
+        for i in leaderboard:
+            # iterates over i and print the rank of the player the name and the score.
+            player = i["player"] #quotes because we are technically receiving json which acts like a dictionary
+            score = i["score"]
+            print(f"{rank}. {player} - {score}") #more voodoo string magic
+            rank += 1
+    else:
+        print("Error getting leaderboard.")
+
+
 def numbered_input(prompt, n=2):
-    yes_def = {"y": 1, "ye": 1, "yes": 1, "yep": 1, "sure": 1, "absolutely": 1}
+    yes_def = {"y": 1, "ye": 1, "yes": 1, "yep": 1, "sure": 1, "absolutely": 1, "i guess": 1, "mhm": 1}
     no_def = {"n": 2, "no": 2, "nope": 2,"nah": 2, "absolutely not": 2, "no way in hell": 2}
 
     while True:
@@ -137,7 +161,7 @@ while True:
         guesses = 0
 
         while True:
-            # Insure the guesses are integers
+            # make sure the guesses are integers
             try:
                 guess = int(input("Your guess: "))
                 if guess < 1 or guess > max_number:
@@ -161,12 +185,14 @@ while True:
             if guesses == maxGuesses:
                 print(f"You ran out of guesses {name}")
                 break
-
+            print(f"You have {maxGuesses - guesses} guesses remaining.")
         score = sum(distances) / len(distances)
 
     print("Your score was: " + str(score))
 
+    submit_score(name, score, mode, diff)
 
+    get_leaderboard(mode, diff)
 
     play_again = numbered_input("Would you like to play again?\n[1] yes\n[2] no\n>")
     if play_again == 1:
